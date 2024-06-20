@@ -4,6 +4,7 @@ import dev.ghanshyam.productservice.dto.GenericProductDto;
 import dev.ghanshyam.productservice.dto.FakeStoreProductDto;
 import dev.ghanshyam.productservice.exceptions.NotFoundException;
 import dev.ghanshyam.productservice.thirdPartyClients_FakeStore.FakeStoreServiceClient;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 
+@Primary
 @Service
 public class FakeStoreProductService implements ProductServices{
     FakeStoreServiceClient fakeStoreServiceClient;

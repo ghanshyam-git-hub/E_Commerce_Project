@@ -4,10 +4,12 @@ import dev.ghanshyam.productservice.dto.FakeStoreProductDto;
 import dev.ghanshyam.productservice.dto.GenericProductDto;
 import dev.ghanshyam.productservice.exceptions.NotFoundException;
 import dev.ghanshyam.productservice.services.FakeStoreProductService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
@@ -16,23 +18,36 @@ import java.util.ArrayList;
 
 @Component
 public class FakeStoreServiceClient {
-    private String resourceurl = "https://fakestoreapi.com/products/{id}";
-    private String createProductUrl = "https://fakestoreapi.com/products";
-    private String getAllProductsUrl = "https://fakestoreapi.com/products";
-    private String updateProductByIdUrl = "https://fakestoreapi.com/products/{id}";
-    private String deleteresourceurl = "https://fakestoreapi.com/products/{id}";
+    /*
+    Setting the api urls. @Value fetches the constants set in the application.properties file.
+    This is used to facilitate change in 3rd party apis in future, it will be easy to just change the values in the application.properties file
+     */
+    @Value("${fakestore.api.url}")
+    private String fakeStoreApiUrl;
+
+    @Value("${fakestore.api.product.path}")
+    private String fakeStoreProductPath;
+
+    private String productsUrl;
+
+    private String specificProductsUrl;
 
     private RestTemplateBuilder restTemplateBuilder;
 
-    public FakeStoreServiceClient(RestTemplateBuilder restTemplateBuilder) {
+    public FakeStoreServiceClient(RestTemplateBuilder restTemplateBuilder,
+                                  @Value("${fakestore.api.url}") String fakeStoreApiUrl,
+                                  @Value("${fakestore.api.product.path}") String fakeStoreProductPath) {
         this.restTemplateBuilder = restTemplateBuilder;
+        this.productsUrl = fakeStoreApiUrl + fakeStoreProductPath;
+        this.specificProductsUrl = fakeStoreApiUrl + fakeStoreProductPath + "/{id}";
     }
 
     public FakeStoreProductDto getProductById(long id) throws NotFoundException
     {
+
         RestTemplate restTemplate = restTemplateBuilder.build(); // for now we are not configuring anything here like setting parameters etc
         ResponseEntity<FakeStoreProductDto> response =
-                restTemplate.getForEntity(resourceurl, FakeStoreProductDto.class,id);  // id is the uri variable , if we would have {id}/{name} int he uri - we would have given id,"naman"  in this method.
+                restTemplate.getForEntity(specificProductsUrl, FakeStoreProductDto.class,id);  // id is the uri variable , if we would have {id}/{name} int he uri - we would have given id,"naman"  in this method.
 
         FakeStoreProductDto productdto = response.getBody(); // getForEntity method we had specified that the response object we want is of productDto class
         // we were previously wanting to capture this DTO in Products, but category was another object in that, so we made this another GenericDTO class with same datamembers as Products except the category is String instead of Categorgy object
@@ -48,14 +63,13 @@ public class FakeStoreServiceClient {
         /* Note when we want to send a list, better to get the array of the MainDTO in the response type instead of ArrayList"
         Read RunTime Type Erasure - https://www.baeldung.com/java-type-erasure
         */
-        ResponseEntity<FakeStoreProductDto[]> response = restTemplate.getForEntity(getAllProductsUrl, FakeStoreProductDto[].class);
+        ResponseEntity<FakeStoreProductDto[]> response = restTemplate.getForEntity(productsUrl, FakeStoreProductDto[].class);
         return response.getBody();
     }
 
     public FakeStoreProductDto add_product(FakeStoreProductDto fakeStoreProductDto){
-
         RestTemplate restTemplate = restTemplateBuilder.build();
-        ResponseEntity<FakeStoreProductDto> response = restTemplate.postForEntity(createProductUrl, fakeStoreProductDto, FakeStoreProductDto.class);
+        ResponseEntity<FakeStoreProductDto> response = restTemplate.postForEntity(productsUrl, fakeStoreProductDto, FakeStoreProductDto.class);
         return response.getBody();
     }
 
@@ -72,7 +86,7 @@ public class FakeStoreServiceClient {
         RequestCallback requestCallback = restTemplate.acceptHeaderRequestCallback(FakeStoreProductDto.class);
         ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor =
                 restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
-        ResponseEntity<FakeStoreProductDto> response =  restTemplate.execute(updateProductByIdUrl, HttpMethod.GET, requestCallback, responseExtractor, id);
+        ResponseEntity<FakeStoreProductDto> response =  restTemplate.execute(specificProductsUrl, HttpMethod.GET, requestCallback, responseExtractor, id);
 
         return response.getBody();
     }
@@ -82,12 +96,13 @@ public class FakeStoreServiceClient {
         RequestCallback requestCallback = restTemplate.acceptHeaderRequestCallback(FakeStoreProductDto.class);
         ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor =
                 restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
-        ResponseEntity<FakeStoreProductDto> response =  restTemplate.execute(updateProductByIdUrl, HttpMethod.GET, requestCallback, responseExtractor, id);
+        ResponseEntity<FakeStoreProductDto> response =  restTemplate.execute(specificProductsUrl, HttpMethod.GET, requestCallback, responseExtractor, id);
 
         return response.getBody();
     }
 
     public FakeStoreProductDto delete_product(Long id){
+
         RestTemplate restTemplate = restTemplateBuilder.build();
         /*
         restTemplate.delete(); cant use the delete method becoz it is returning void but our requirement at fakestore is to return the Object deleted with status code ok (200)
@@ -100,7 +115,7 @@ public class FakeStoreServiceClient {
         RequestCallback requestCallback = restTemplate.acceptHeaderRequestCallback(FakeStoreProductDto.class);
         ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor =
                 restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
-        ResponseEntity<FakeStoreProductDto> response =  restTemplate.execute(deleteresourceurl, HttpMethod.DELETE, requestCallback, responseExtractor, id);
+        ResponseEntity<FakeStoreProductDto> response =  restTemplate.execute(specificProductsUrl, HttpMethod.DELETE, requestCallback, responseExtractor, id);
 
         return (response.getBody());
     }
