@@ -4,6 +4,8 @@ import dev.ghanshyam.productservice.dto.FakeStoreProductDto;
 import dev.ghanshyam.productservice.dto.GenericProductDto;
 import dev.ghanshyam.productservice.exceptions.NotFoundException;
 import dev.ghanshyam.productservice.services.FakeStoreProductService;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
@@ -15,8 +17,13 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-
+/*
+The 3rd party services provide us with apis and also the Client Classes and methods to send the requests to these apis
+like Razorpay provides the api links and also gives us the CLient classes containing the methods to send requests to thos apis
+So this class serves that purpose - the purpose of actually sending the requests to the apis
+ */
 @Component
+
 public class FakeStoreServiceClient {
     /*
     Setting the api urls. @Value fetches the constants set in the application.properties file.
@@ -32,7 +39,10 @@ public class FakeStoreServiceClient {
 
     private String specificProductsUrl;
 
-    private RestTemplateBuilder restTemplateBuilder;
+    private RestTemplateBuilder restTemplateBuilder; // not required now as we are craeting a RestTemplate bean in the ApplicationConfiguration.java file in config folder
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     public FakeStoreServiceClient(RestTemplateBuilder restTemplateBuilder,
                                   @Value("${fakestore.api.url}") String fakeStoreApiUrl,
@@ -44,8 +54,8 @@ public class FakeStoreServiceClient {
 
     public FakeStoreProductDto getProductById(long id) throws NotFoundException
     {
-
-        RestTemplate restTemplate = restTemplateBuilder.build(); // for now we are not configuring anything here like setting parameters etc
+        // RestTemplate object is now autowired . This bean is created in the @ Configuration file which is ApplicationCongiguration.java in config folder in this project
+        //RestTemplate restTemplate = restTemplateBuilder.build(); // for now we are not configuring anything here like setting parameters etc
         ResponseEntity<FakeStoreProductDto> response =
                 restTemplate.getForEntity(specificProductsUrl, FakeStoreProductDto.class,id);  // id is the uri variable , if we would have {id}/{name} int he uri - we would have given id,"naman"  in this method.
 
@@ -59,7 +69,7 @@ public class FakeStoreServiceClient {
 
     public FakeStoreProductDto[] getAllProducts(){
         ArrayList<FakeStoreProductDto> FakeProductList = new ArrayList<>();
-        RestTemplate restTemplate = restTemplateBuilder.build();
+        //RestTemplate restTemplate = restTemplateBuilder.build();
         /* Note when we want to send a list, better to get the array of the MainDTO in the response type instead of ArrayList"
         Read RunTime Type Erasure - https://www.baeldung.com/java-type-erasure
         */
@@ -68,13 +78,13 @@ public class FakeStoreServiceClient {
     }
 
     public FakeStoreProductDto add_product(FakeStoreProductDto fakeStoreProductDto){
-        RestTemplate restTemplate = restTemplateBuilder.build();
+        //RestTemplate restTemplate = restTemplateBuilder.build();
         ResponseEntity<FakeStoreProductDto> response = restTemplate.postForEntity(productsUrl, fakeStoreProductDto, FakeStoreProductDto.class);
         return response.getBody();
     }
 
     public FakeStoreProductDto partial_update_product(FakeStoreProductDto fakeStoreProductDto,Long id){
-        RestTemplate restTemplate = restTemplateBuilder.build();
+        //RestTemplate restTemplate = restTemplateBuilder.build();
         /*
          This didnt worked , used the getForEntity inside methods to implement this. just in the case of deletebyId
         GenericProductDto updatedProduct = restTemplate.patchForObject(updateProductByIdUrl,genericProductDto,GenericProductDto.class,id);
@@ -92,7 +102,7 @@ public class FakeStoreServiceClient {
     }
 
     public FakeStoreProductDto full_update_product(FakeStoreProductDto fakeStoreProductDto,Long id){
-        RestTemplate restTemplate = restTemplateBuilder.build();
+        //RestTemplate restTemplate = restTemplateBuilder.build();
         RequestCallback requestCallback = restTemplate.acceptHeaderRequestCallback(FakeStoreProductDto.class);
         ResponseExtractor<ResponseEntity<FakeStoreProductDto>> responseExtractor =
                 restTemplate.responseEntityExtractor(FakeStoreProductDto.class);
@@ -103,7 +113,7 @@ public class FakeStoreServiceClient {
 
     public FakeStoreProductDto delete_product(Long id){
 
-        RestTemplate restTemplate = restTemplateBuilder.build();
+        //RestTemplate restTemplate = restTemplateBuilder.build();
         /*
         restTemplate.delete(); cant use the delete method becoz it is returning void but our requirement at fakestore is to return the Object deleted with status code ok (200)
         so we have to work around and get the requested object by id back scene and return to the controller

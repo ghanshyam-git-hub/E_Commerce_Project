@@ -12,7 +12,8 @@ public class ControllerAdvisors {
     @ExceptionHandler(NotFoundException.class)
     private ResponseEntity<ExceptionDto> notfoundexception(NotFoundException n){
         ResponseEntity<ExceptionDto> response = new ResponseEntity(
-                new ExceptionDto(HttpStatus.BAD_REQUEST, n.getMessage()), HttpStatus.BAD_REQUEST
+                new ExceptionDto(HttpStatus.BAD_REQUEST, n.getMessage()),
+                HttpStatus.BAD_REQUEST
         );
 
         return response;

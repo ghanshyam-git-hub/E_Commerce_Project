@@ -1,7 +1,6 @@
 package dev.ghanshyam.productservice.controllers;
 
-import dev.ghanshyam.productservice.dto.FakeStoreProductDto;
-import dev.ghanshyam.productservice.dto.GenericProductDto;
+import dev.ghanshyam.productservice.dto.*;
 import dev.ghanshyam.productservice.exceptions.NotFoundException;
 import dev.ghanshyam.productservice.services.ProductServices;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,8 +16,13 @@ import java.util.List;
 public class ProductController {
     private ProductServices productServices;
 
-    public ProductController(@Qualifier("fakeStoreProductService") ProductServices productServices) {
+    public ProductController(@Qualifier("RealStoreProductService") ProductServices productServices) {
         this.productServices = productServices;
+    }
+
+    @GetMapping("/{id}")
+    public GenericProductDto getProductById(@PathVariable ("id") long id) throws NotFoundException {
+            return productServices.getProductById(id);
     }
 
     @GetMapping
@@ -26,10 +30,16 @@ public class ProductController {
         return productServices.getAllProducts();
     }
 
-    @GetMapping("{id}")
-    public GenericProductDto getProductById(@PathVariable ("id") long id) throws NotFoundException {
-            return productServices.getProductById(id);
+    @GetMapping("/categories")
+    public List<CategoriesDto> getAllCategories(){
+        return productServices.getAllCategories();
     }
+
+    @GetMapping("/category/{category_name}")
+    public List<GenericProductDto> getProductsByCategory(@PathVariable ("category_name") String category_name){
+        return productServices.getAllProductsByCategory(category_name);
+    }
+
 // 2 ways to handle exceptions
     // 1st way is below - at the controller level use @ExceptionHandler for the methods handling a particular exception
    /* @ExceptionHandler(NotFoundException.class)
@@ -43,40 +53,44 @@ public class ProductController {
 
     //2nd way -  to move this method with @ExceptionHanler outside controller in a separate class and annotate that class as @ControllerAdvice
 
-    @GetMapping("categories")
-    public List<String> getAllCategaories(){
-        List<String> categories = new ArrayList<>();
-        categories.add("electronics");
-        categories.add("stationary");
-        categories.add("beauty");
-        categories.add("health");
 
-        return categories;
-    }
+
+//    @PostMapping
+//    public GenericProductDto add_product(@RequestBody FakeStoreProductDto fakeStoreProductDto){
+//        return productServices.add_product(fakeStoreProductDto);
+//    }
 
     @PostMapping
-    public GenericProductDto add_product(@RequestBody FakeStoreProductDto fakeStoreProductDto){
-        return productServices.add_product(fakeStoreProductDto);
+    public GenericProductDto addProduct(@RequestBody AddProductDto addProductDto){
+        return productServices.add_product(addProductDto);
     }
 
-    @DeleteMapping("{id}")
-    public ResponseEntity<GenericProductDto> delete_product(@PathVariable ("id") Long id){
-        ResponseEntity<GenericProductDto> response = new ResponseEntity<>(
-                productServices.delete_product(id),
-                HttpStatus.BAD_REQUEST
-                );
-
-        return response;
-
+    @DeleteMapping("/{id}")
+    public void deleteProductById(@PathVariable("id") long id) throws NotFoundException {
+        productServices.delete_product(id);
     }
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<GenericProductDto> delete_product(@PathVariable ("id") Long id){
+//        ResponseEntity<GenericProductDto> response = new ResponseEntity<>(
+//                productServices.delete_product(id),
+//                HttpStatus.BAD_REQUEST
+//                );
+//
+//        return response;
+//
+//    }
 
-    @PatchMapping("{id}")
+    @PatchMapping("/{id}")
     public GenericProductDto partial_update_product(@RequestBody FakeStoreProductDto fakeStoreProductDto, @PathVariable ("id") Long id){
         return productServices.partial_update_product(fakeStoreProductDto,id);
     }
 
-    @PutMapping("{id}")
-    public GenericProductDto full_update_product(@RequestBody FakeStoreProductDto fakeStoreProductDto, @PathVariable ("id") Long id){
-        return productServices.full_update_product(fakeStoreProductDto,id);
+//    @PutMapping("/{id}")
+//    public GenericProductDto full_update_product(@RequestBody FakeStoreProductDto fakeStoreProductDto, @PathVariable ("id") Long id){
+//        return productServices.full_update_product(fakeStoreProductDto,id);
+//    }
+    @PutMapping("/{id}")
+    public void full_update_product(@RequestBody UpdateProductDto updateProductDto, @PathVariable("id") long id){
+        productServices.full_update_product(updateProductDto,id);
     }
 }
