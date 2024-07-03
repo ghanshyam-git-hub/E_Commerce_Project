@@ -80,9 +80,10 @@ public class ProductController {
 //
 //    }
 
+    // patch and delete both can achieve each others result here
     @PatchMapping("/{id}")
-    public GenericProductDto partial_update_product(@RequestBody FakeStoreProductDto fakeStoreProductDto, @PathVariable ("id") Long id){
-        return productServices.partial_update_product(fakeStoreProductDto,id);
+    public void partial_update_product(@RequestBody UpdateProductDto updateProductDto, @PathVariable("id") long id){
+        productServices.full_update_product(updateProductDto,id);
     }
 
 //    @PutMapping("/{id}")
